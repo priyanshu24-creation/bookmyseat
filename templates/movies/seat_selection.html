@@ -1,0 +1,204 @@
+{% extends "users/basic.html" %}
+{% block content %}
+
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+
+      <!-- Movie and Theater Info -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+          <div class="w-100 text-center text-md-start">
+   <h4 class="card-title mb-1">{{ theater.movie.name }}</h4>
+<p class="card-text text-muted mb-0">{{ theater.name }}</p>
+  </div>
+
+            <div class="show-row">
+              <div class="mt-2 mt-sm-0">
+                <button class="btn btn-outline-primary me-2 mb-2 mb-sm-0">2D</button>
+                <button class="btn btn-outline-primary me-2 mb-2 mb-sm-0">3D</button>
+                <button class="btn btn-outline-primary mb-2 mb-sm-0">IMAX 3D</button>
+                <button class="btn btn-outline-primary mb-2 mb-sm-0">
+                  {{ seats|length }} Tickets
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Seat Selection -->
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title text-center mb-4">Select Your Seats</h5>
+          <div class="screen">All eyes this way please!</div>
+
+          <div id="timerBox" class="text-center text-danger fw-bold mb-3" style="display:none;">
+            ⏳ Reservation expires in <span id="timer"></span>
+          </div>
+
+          <form method="POST">
+            {% csrf_token %}
+
+            <div class="d-flex justify-content-center flex-wrap mb-4" style="max-width:100%;overflow-x:auto;">
+
+              {% regroup seats by seat_number.0 as seat_rows %}
+
+              {% for row in seat_rows %}
+              <div class="w-100 d-flex justify-content-center mb-2">
+                {% for seat in row.list %}
+                <div class="seat {% if seat.is_booked %}sold{% endif %}">
+                  {% if not seat.is_booked %}
+                    <input
+                      type="radio"
+                      name="seat_id"
+                      value="{{ seat.id }}"
+                      id="seat-{{ seat.id }}"
+                      class="seat-input"
+                    />
+                    <label for="seat-{{ seat.id }}" class="seat-label">
+                      {{ seat.seat_number }}
+                    </label>
+                  {% else %}
+                    {{ seat.seat_number }}
+                  {% endif %}
+                </div>
+                {% endfor %}
+              </div>
+              {% endfor %}
+
+            </div>
+
+            <!-- Seat Legend -->
+            <div class="d-flex justify-content-center mb-4">
+              <div class="d-flex align-items-center me-4">
+                <div class="seat" style="background-color:white;"></div>
+                <span class="ms-2">Available</span>
+              </div>
+              <div class="d-flex align-items-center me-4">
+                <div class="seat selected"></div>
+                <span class="ms-2">Selected</span>
+              </div>
+              <div class="d-flex align-items-center">
+                <div class="seat sold"></div>
+                <span class="ms-2">Sold</span>
+              </div>
+            </div>
+
+            <!-- Book Button -->
+            <div class="text-center">
+              <button type="submit" class="btn btn-success btn-lg w-100">
+                Book Selected Seats
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+.seat {
+  min-width: 36px;
+  min-height: 36px;
+  border: 1px solid #28a745;
+  margin: 4px;
+  text-align: center;
+  line-height: 36px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: bold;
+  color: black;
+  background: white;
+}
+
+.seat label {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.seat.selected {
+  background-color: #28a745;
+  color: white;
+}
+
+.seat.sold {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.screen {
+  margin: 20px 0;
+  background-color: #ccc;
+  height: 50px;
+  text-align: center;
+  line-height: 50px;
+  color: #666;
+}
+
+.seat-input {
+  display: none;
+}
+
+.seat-label {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+</style>
+
+<script>
+let timerInterval = null;
+let expiryTime = null;
+
+document.querySelectorAll(".seat-label").forEach(label=>{
+  label.addEventListener("click", function(){
+
+    document.querySelectorAll(".seat").forEach(s=>s.classList.remove("selected"));
+    this.closest(".seat").classList.add("selected");
+
+    expiryTime = new Date().getTime() + 5 * 60000;
+
+    document.getElementById("timerBox").style.display = "block";
+
+    startTimer();
+  });
+});
+
+function startTimer(){
+
+  if(timerInterval){
+    clearInterval(timerInterval);
+  }
+
+  timerInterval = setInterval(()=>{
+    const now = new Date().getTime();
+    const diff = expiryTime - now;
+
+    if(diff <= 0){
+      clearInterval(timerInterval);
+      alert("Reservation expired. Please select again.");
+      location.reload();
+      return;
+    }
+
+    const min = Math.floor(diff / 60000);
+    const sec = Math.floor((diff % 60000) / 1000);
+
+    document.getElementById("timer").innerText =
+      min + ":" + (sec < 10 ? "0"+sec : sec);
+
+  },1000);
+}
+</script>
+
+{% endblock %}

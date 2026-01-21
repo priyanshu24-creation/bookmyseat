@@ -1,0 +1,55 @@
+{% extends "users/basic.html" %}
+{% block content %}
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+
+      <div class="card shadow-lg p-4 text-center">
+
+        <div style="font-size:60px;">✅</div>
+
+        <h2 class="text-success mt-2">Payment Successful</h2>
+        <p class="text-muted">Your ticket booking is confirmed</p>
+
+        <hr>
+
+        <div class="mb-3">
+          <h5>🎬 Movie</h5>
+          <p class="fw-bold">{{ booking.movie.name }}</p>
+        </div>
+
+        <div class="mb-3">
+          <h5>🏛 Theater</h5>
+          <p class="fw-bold">{{ booking.theater.name }}</p>
+        </div>
+
+        <div class="mb-3">
+          <h5>💺 Seat</h5>
+          <p class="fw-bold">{{ booking.seat.seat_number }}</p>
+        </div>
+
+        <div class="mb-3">
+          <h5>💰 Amount Paid</h5>
+          <p class="fw-bold">₹{{ booking.total_price }}</p>
+        </div>
+
+        <div class="alert alert-success fw-bold fs-5">
+          Enjoy your show! 🍿
+        </div>
+
+        <a href="/" class="btn btn-primary btn-lg w-100">
+          Go Home
+        </a>
+
+        <p class="mt-3 text-muted" style="font-size:13px;">
+          Thank you for booking with BookMySeat ❤️
+        </p>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
