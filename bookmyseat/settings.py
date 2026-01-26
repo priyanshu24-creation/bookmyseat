@@ -1,6 +1,7 @@
 from pathlib import Path
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
+import dj_database_url
 
 load_dotenv()
 
@@ -8,9 +9,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 
-DEBUG = os.getenv("DEBUG", "True") == "True"
+DEBUG = os.getenv("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    ".vercel.app",
+    "127.0.0.1",
+    "localhost"
+]
+
+# ---------------- APPS ----------------
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -24,10 +31,10 @@ INSTALLED_APPS = [
     'users',
 ]
 
+# ---------------- MIDDLEWARE ----------------
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-
-    # WhiteNoise MUST come right after SecurityMiddleware
     'whitenoise.middleware.WhiteNoiseMiddleware',
 
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -38,7 +45,11 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# ---------------- URLS ----------------
+
 ROOT_URLCONF = 'bookmyseat.urls'
+
+# ---------------- TEMPLATES ----------------
 
 TEMPLATES = [
     {
@@ -56,15 +67,21 @@ TEMPLATES = [
     },
 ]
 
+# ---------------- DATABASE ----------------
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    "default": dj_database_url.config(
+        default=os.getenv("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
+
+# ---------------- AUTH ----------------
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
+USE_I18N = True
 USE_TZ = True
 
 # ---------------- STATIC ----------------
@@ -98,5 +115,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+
+# ---------------- SECURITY ----------------
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
