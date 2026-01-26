@@ -27,6 +27,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'cloudinary_storage',
+    'cloudinary',
+
     'movies',
     'users',
 ]
@@ -77,7 +80,7 @@ DATABASES = {
     )
 }
 
-# ---------------- AUTH ----------------
+# ---------------- AUTH & LOCALE ----------------
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -96,11 +99,6 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# ---------------- MEDIA ----------------
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
 # ---------------- EMAIL ----------------
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -115,6 +113,16 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+
+# ---------------- CLOUDINARY ----------------
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.getenv("CLOUDINARY_CLOUD_NAME"),
+    'API_KEY': os.getenv("CLOUDINARY_API_KEY"),
+    'API_SECRET': os.getenv("CLOUDINARY_API_SECRET"),
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # ---------------- SECURITY ----------------
 
