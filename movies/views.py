@@ -2,8 +2,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 
+from .catalog import get_catalog_movies, get_movie_with_theaters
 from .models import Movie, Theater, Seat, Booking
 
 import razorpay
@@ -29,34 +30,35 @@ def clear_expired_reservations():
 # MOVIE LIST
 # =========================
 def movie_list(request):
-    movies = Movie.objects.all()
-
     search_query = request.GET.get('search')
     genre = request.GET.get('genre')
     language = request.GET.get('language')
 
-    if search_query:
-        movies = movies.filter(name__icontains=search_query)
+    movies, using_demo_data = get_catalog_movies(
+        search_query=search_query,
+        genre=genre,
+        language=language,
+    )
 
-    if genre:
-        movies = movies.filter(genre__iexact=genre.strip())
-
-    if language:
-        movies = movies.filter(language__iexact=language.strip())
-
-    return render(request, 'movies/movie_list.html', {'movies': movies})
+    return render(request, 'movies/movie_list.html', {
+        'movies': movies,
+        'using_demo_data': using_demo_data,
+    })
 
 
 # =========================
 # THEATER LIST
 # =========================
 def theater_list(request, movie_id):
-    movie = get_object_or_404(Movie, id=movie_id)
-    theaters = Theater.objects.filter(movie=movie)
+    movie, theaters, using_demo_data = get_movie_with_theaters(movie_id)
+    if movie is None:
+        raise Http404("Movie not found")
 
     return render(request, 'movies/theater_list.html', {
         'movie': movie,
-        'theaters': theaters
+        'theaters': theaters,
+        'booking_available': not using_demo_data,
+        'using_demo_data': using_demo_data,
     })
 
 

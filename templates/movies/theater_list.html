@@ -135,6 +135,11 @@ body {
 
 <body>
   <div class="container">
+    {% if using_demo_data %}
+      <div class="alert alert-warning mt-3" role="alert">
+        Live booking is reconnecting. Showing the saved demo schedule for now.
+      </div>
+    {% endif %}
 
     <!-- Movie Title -->
     {% if movie %}
@@ -168,9 +173,13 @@ body {
             Time Not Set
           {% endif %}
 
-          <a href="{% url 'book_seats' theater.id %}">
-            <span>Book Now</span>
-          </a>
+          {% if booking_available %}
+            <a href="{% url 'book_seats' theater.id %}">
+              <span>Book Now</span>
+            </a>
+          {% else %}
+            <span>Demo View Only</span>
+          {% endif %}
         </div>
       </div>
       {% endfor %}

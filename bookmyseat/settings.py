@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import sys
 from dotenv import load_dotenv
 import dj_database_url
 
@@ -72,12 +73,46 @@ TEMPLATES = [
 
 # ---------------- DATABASE ----------------
 
-DATABASES = {
-    "default": dj_database_url.config(
-        default=os.getenv("DATABASE_URL"),
-        conn_max_age=600,
-        ssl_require=True
-    )
+DATABASE_URL = os.getenv("DATABASE_URL")
+DB_CONN_MAX_AGE = int(os.getenv("DB_CONN_MAX_AGE", "0"))
+DB_SSL_REQUIRE = os.getenv("DB_SSL_REQUIRE", "True") == "True"
+LOCAL_SQLITE_COMMANDS = {
+    "runserver",
+    "shell",
+    "check",
+    "createsuperuser",
+    "makemigrations",
+    "migrate",
+    "showmigrations",
+    "test",
+}
+USE_SQLITE_LOCAL = os.getenv("USE_SQLITE_LOCAL")
+
+if USE_SQLITE_LOCAL is None:
+    USE_SQLITE_LOCAL = len(sys.argv) > 1 and sys.argv[1] in LOCAL_SQLITE_COMMANDS
+else:
+    USE_SQLITE_LOCAL = USE_SQLITE_LOCAL == "True"
+
+if DATABASE_URL and not USE_SQLITE_LOCAL:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=DB_CONN_MAX_AGE,
+            ssl_require=DB_SSL_REQUIRE,
+        )
+    }
+    DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
+
+DATABASES["sqlite_fallback"] = {
+    "ENGINE": "django.db.backends.sqlite3",
+    "NAME": BASE_DIR / "db.sqlite3",
 }
 
 # ---------------- AUTH & LOCALE ----------------
@@ -90,6 +125,8 @@ USE_TZ = True
 # ---------------- STATIC ----------------
 
 STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 STATICFILES_DIRS = [
     BASE_DIR / 'static'
@@ -97,7 +134,10 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+if DEBUG or USE_SQLITE_LOCAL:
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
+else:
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # ---------------- EMAIL ----------------
 

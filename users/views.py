@@ -1,23 +1,27 @@
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from .forms import UserRegisterForm, UserUpdateForm
 from django.shortcuts import render,redirect
+from django.contrib.staticfiles.storage import staticfiles_storage
 from django.contrib.auth import login,authenticate
 from django.contrib.auth.decorators import login_required
-from movies.models import Movie , Booking
+from movies.catalog import get_catalog_movies
+from movies.models import Booking
 
 def home(request):
-    movies= Movie.objects.all()
-    genre = request.GET.get('genre')
-    language = request.GET.get('language')
+    movies, using_demo_data = get_catalog_movies(
+        genre=request.GET.get('genre'),
+        language=request.GET.get('language'),
+    )
+    return render(request, 'users/home.html', {
+        'movies': movies,
+        'using_demo_data': using_demo_data,
+    })
 
-    if genre:
-        movies = movies.filter(genre=genre)
 
-    if language:
-        movies = movies.filter(language=language)
+def favicon(request):
+    return redirect(staticfiles_storage.url("favicon.svg"))
 
-    return render(request, 'users/home.html', {'movies': movies})
-    return render(request,'users/home.html',{'movies':movies})
+
 def register(request):
     if request.method == 'POST':
         form=UserRegisterForm(request.POST)
