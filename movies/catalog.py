@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 DATABASE_ERRORS = (OperationalError, DatabaseError)
 
 
+def _can_use_sqlite_fallback():
+    return getattr(settings, "DEMO_MODE", False) or getattr(settings, "ALLOW_SQLITE_FALLBACK", False)
+
+
 def _apply_movie_filters(queryset, search_query=None, genre=None, language=None):
     if search_query:
         queryset = queryset.filter(name__icontains=search_query)
@@ -102,6 +106,8 @@ def get_catalog_movies(search_query=None, genre=None, language=None):
             "Primary database is unavailable. Serving movie catalog from sqlite fallback.",
             exc_info=True,
         )
+        if not _can_use_sqlite_fallback():
+            raise
 
     try:
         queryset = _apply_movie_filters(
@@ -132,6 +138,8 @@ def get_movie_with_theaters(movie_id):
             "Primary database is unavailable. Serving theater list from sqlite fallback.",
             exc_info=True,
         )
+        if not _can_use_sqlite_fallback():
+            raise
 
     try:
         movie = Movie.objects.using("sqlite_fallback").filter(id=movie_id).first()

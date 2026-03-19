@@ -21,6 +21,14 @@ def _env_flag(name, default=False):
         return default
     return value.lower() in {"1", "true", "yes", "on"}
 
+
+def _clean_env(name, default=None):
+    value = os.getenv(name)
+    if value is None:
+        return default
+    cleaned = value.strip().strip("'").strip('"')
+    return cleaned or default
+
 ALLOWED_HOSTS = [
     ".vercel.app",
     "127.0.0.1",
@@ -83,9 +91,9 @@ TEMPLATES = [
 
 # ---------------- DATABASE ----------------
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-DB_CONN_MAX_AGE = int(os.getenv("DB_CONN_MAX_AGE", "0"))
-DB_SSL_REQUIRE = os.getenv("DB_SSL_REQUIRE", "True") == "True"
+DATABASE_URL = _clean_env("DATABASE_URL")
+DB_CONN_MAX_AGE = int(_clean_env("DB_CONN_MAX_AGE", "0"))
+DB_SSL_REQUIRE = _env_flag("DB_SSL_REQUIRE", True)
 RUNNING_ON_VERCEL = _env_flag("VERCEL")
 LOCAL_SQLITE_COMMANDS = {
     "runserver",
@@ -99,6 +107,7 @@ LOCAL_SQLITE_COMMANDS = {
 }
 USE_SQLITE_LOCAL = os.getenv("USE_SQLITE_LOCAL")
 USE_DEMO_DATABASE = os.getenv("USE_DEMO_DATABASE")
+ALLOW_SQLITE_FALLBACK = _env_flag("ALLOW_SQLITE_FALLBACK", False)
 
 if USE_SQLITE_LOCAL is None:
     USE_SQLITE_LOCAL = len(sys.argv) > 1 and sys.argv[1] in LOCAL_SQLITE_COMMANDS
@@ -106,7 +115,7 @@ else:
     USE_SQLITE_LOCAL = USE_SQLITE_LOCAL.lower() == "true"
 
 if USE_DEMO_DATABASE is None:
-    USE_DEMO_DATABASE = RUNNING_ON_VERCEL and not DEBUG
+    USE_DEMO_DATABASE = False
 else:
     USE_DEMO_DATABASE = USE_DEMO_DATABASE.lower() == "true"
 
@@ -144,6 +153,10 @@ if DATABASE_URL and not USING_SQLITE_DATABASE:
             ssl_require=DB_SSL_REQUIRE,
         )
     }
+    DATABASES["default"].setdefault("OPTIONS", {})
+    DATABASES["default"]["OPTIONS"].setdefault("connect_timeout", 10)
+    if DB_SSL_REQUIRE:
+        DATABASES["default"]["OPTIONS"].setdefault("sslmode", "require")
     DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
 else:
     DATABASES = {
