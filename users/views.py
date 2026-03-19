@@ -2,6 +2,7 @@ from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from .forms import UserRegisterForm, UserUpdateForm
 from django.shortcuts import render,redirect
 from django.conf import settings
+from django.db.utils import DatabaseError, OperationalError
 from django.contrib.auth import login,authenticate
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse, Http404
@@ -43,10 +44,13 @@ def register(request):
 def login_view(request):
     if request.method == 'POST':
         form=AuthenticationForm(request,data=request.POST)
-        if form.is_valid():
-            user=form.get_user()
-            login(request,user)
-            return redirect('/')
+        try:
+            if form.is_valid():
+                user=form.get_user()
+                login(request,user)
+                return redirect('/')
+        except (OperationalError, DatabaseError):
+            form.add_error(None, 'Login is temporarily unavailable. Please try again shortly.')
     else:
         form=AuthenticationForm()
     return render(request,'users/login.html',{'form':form})

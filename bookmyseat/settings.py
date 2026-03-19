@@ -45,6 +45,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'bookmyseat.middleware.SafeAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -121,6 +122,11 @@ LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
+SESSION_ENGINE = os.getenv(
+    "SESSION_ENGINE",
+    "django.contrib.sessions.backends.signed_cookies"
+)
+MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 
 # ---------------- STATIC ----------------
 
