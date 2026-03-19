@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from urllib.parse import quote_plus
 from pathlib import Path
 
+from cloudinary.utils import cloudinary_url
 from django.conf import settings
 from django.db.utils import DatabaseError, OperationalError
 
@@ -35,11 +36,11 @@ def _build_poster_url(movie):
     image_name = str(image or "").strip()
     image_public_id = getattr(image, "public_id", image_name).strip()
 
-    if getattr(settings, "USE_SQLITE_LOCAL", False) and image_public_id:
+    if image_public_id:
         media_root = Path(settings.MEDIA_ROOT)
         exact_candidates = [
-            media_root / image_name.replace("/", str(Path("/"))),
-            media_root / image_public_id.replace("/", str(Path("/"))),
+            media_root / Path(image_name),
+            media_root / Path(image_public_id),
         ]
         for candidate in exact_candidates:
             if candidate.exists() and candidate.is_file():
@@ -57,7 +58,23 @@ def _build_poster_url(movie):
         except Exception:
             pass
 
-    if image_name and (getattr(settings, "DEBUG", False) or getattr(settings, "USE_SQLITE_LOCAL", False)):
+    cloud_name = (
+        getattr(settings, "CLOUDINARY_STORAGE", {}).get("CLOUD_NAME")
+        or getattr(settings, "CLOUDINARY_CLOUD_NAME", None)
+    )
+    if image_public_id and cloud_name:
+        image_format = getattr(image, "format", None) or Path(image_name).suffix.lstrip(".")
+        try:
+            return cloudinary_url(
+                image_public_id,
+                cloud_name=cloud_name,
+                secure=True,
+                format=image_format or None,
+            )[0]
+        except Exception:
+            pass
+
+    if image_name:
         return f"{settings.MEDIA_URL}{image_name.lstrip('/')}"
 
     return (

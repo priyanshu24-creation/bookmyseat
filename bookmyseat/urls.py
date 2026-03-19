@@ -16,7 +16,7 @@ urlpatterns = [
 
 ]
 
-if settings.DEBUG or getattr(settings, "USE_SQLITE_LOCAL", False):
+if settings.DEBUG or getattr(settings, "USE_SQLITE_LOCAL", False) or getattr(settings, "RUNNING_ON_VERCEL", False):
     urlpatterns += [
         path('media/<path:path>', serve, {'document_root': settings.MEDIA_ROOT}),
     ]
