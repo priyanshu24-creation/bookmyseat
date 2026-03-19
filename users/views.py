@@ -1,9 +1,10 @@
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from .forms import UserRegisterForm, UserUpdateForm
 from django.shortcuts import render,redirect
-from django.contrib.staticfiles.storage import staticfiles_storage
+from django.conf import settings
 from django.contrib.auth import login,authenticate
 from django.contrib.auth.decorators import login_required
+from django.http import FileResponse, Http404
 from movies.catalog import get_catalog_movies
 from movies.models import Booking
 
@@ -19,7 +20,10 @@ def home(request):
 
 
 def favicon(request):
-    return redirect(staticfiles_storage.url("favicon.svg"))
+    favicon_path = settings.BASE_DIR / "static" / "favicon.svg"
+    if not favicon_path.exists():
+        raise Http404("Favicon not found")
+    return FileResponse(favicon_path.open("rb"), content_type="image/svg+xml")
 
 
 def register(request):
