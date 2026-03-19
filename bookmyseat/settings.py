@@ -1,6 +1,8 @@
 from pathlib import Path
 import os
+import shutil
 import sys
+import tempfile
 from dotenv import load_dotenv
 import dj_database_url
 
@@ -11,6 +13,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 
 DEBUG = os.getenv("DEBUG", "False") == "True"
+
+
+def _env_flag(name, default=False):
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.lower() in {"1", "true", "yes", "on"}
 
 ALLOWED_HOSTS = [
     ".vercel.app",
@@ -77,6 +86,7 @@ TEMPLATES = [
 DATABASE_URL = os.getenv("DATABASE_URL")
 DB_CONN_MAX_AGE = int(os.getenv("DB_CONN_MAX_AGE", "0"))
 DB_SSL_REQUIRE = os.getenv("DB_SSL_REQUIRE", "True") == "True"
+RUNNING_ON_VERCEL = _env_flag("VERCEL")
 LOCAL_SQLITE_COMMANDS = {
     "runserver",
     "shell",
@@ -88,13 +98,45 @@ LOCAL_SQLITE_COMMANDS = {
     "test",
 }
 USE_SQLITE_LOCAL = os.getenv("USE_SQLITE_LOCAL")
+USE_DEMO_DATABASE = os.getenv("USE_DEMO_DATABASE")
 
 if USE_SQLITE_LOCAL is None:
     USE_SQLITE_LOCAL = len(sys.argv) > 1 and sys.argv[1] in LOCAL_SQLITE_COMMANDS
 else:
-    USE_SQLITE_LOCAL = USE_SQLITE_LOCAL == "True"
+    USE_SQLITE_LOCAL = USE_SQLITE_LOCAL.lower() == "true"
 
-if DATABASE_URL and not USE_SQLITE_LOCAL:
+if USE_DEMO_DATABASE is None:
+    USE_DEMO_DATABASE = RUNNING_ON_VERCEL and not DEBUG
+else:
+    USE_DEMO_DATABASE = USE_DEMO_DATABASE.lower() == "true"
+
+USING_SQLITE_DATABASE = USE_SQLITE_LOCAL or USE_DEMO_DATABASE
+DEMO_MODE = USE_DEMO_DATABASE
+
+
+def _runtime_demo_database_path():
+    bundled_database = BASE_DIR / "db.sqlite3"
+    if not bundled_database.exists():
+        return bundled_database
+
+    if USE_DEMO_DATABASE and RUNNING_ON_VERCEL:
+        runtime_database = Path(tempfile.gettempdir()) / "bookmyseat-demo.sqlite3"
+        try:
+            if (
+                not runtime_database.exists()
+                or bundled_database.stat().st_mtime > runtime_database.stat().st_mtime
+            ):
+                shutil.copy2(bundled_database, runtime_database)
+            return runtime_database
+        except OSError:
+            return bundled_database
+
+    return bundled_database
+
+
+DEMO_DATABASE_PATH = _runtime_demo_database_path()
+
+if DATABASE_URL and not USING_SQLITE_DATABASE:
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
@@ -107,13 +149,13 @@ else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
+            "NAME": DEMO_DATABASE_PATH,
         }
     }
 
 DATABASES["sqlite_fallback"] = {
     "ENGINE": "django.db.backends.sqlite3",
-    "NAME": BASE_DIR / "db.sqlite3",
+    "NAME": DEMO_DATABASE_PATH,
 }
 
 # ---------------- AUTH & LOCALE ----------------
@@ -140,7 +182,7 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-if DEBUG or USE_SQLITE_LOCAL:
+if DEBUG or USING_SQLITE_DATABASE:
     STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 else:
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"

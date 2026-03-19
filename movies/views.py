@@ -42,7 +42,7 @@ def movie_list(request):
 
     return render(request, 'movies/movie_list.html', {
         'movies': movies,
-        'using_demo_data': using_demo_data,
+        'using_demo_data': using_demo_data or settings.DEMO_MODE,
     })
 
 
@@ -57,8 +57,8 @@ def theater_list(request, movie_id):
     return render(request, 'movies/theater_list.html', {
         'movie': movie,
         'theaters': theaters,
-        'booking_available': not using_demo_data,
-        'using_demo_data': using_demo_data,
+        'booking_available': not using_demo_data and not settings.DEMO_MODE,
+        'using_demo_data': using_demo_data or settings.DEMO_MODE,
     })
 
 

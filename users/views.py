@@ -3,7 +3,7 @@ from .forms import UserRegisterForm, UserUpdateForm
 from django.shortcuts import render,redirect
 from django.conf import settings
 from django.db.utils import DatabaseError, OperationalError
-from django.contrib.auth import login,authenticate
+from django.contrib.auth import get_user_model, login,authenticate
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse, Http404
 from movies.catalog import get_catalog_movies
@@ -27,6 +27,53 @@ def favicon(request):
     return FileResponse(favicon_path.open("rb"), content_type="image/svg+xml")
 
 
+def _ensure_demo_user():
+    User = get_user_model()
+    username = "demo_admin"
+    password = "Demo@12345"
+    user, created = User.objects.get_or_create(
+        username=username,
+        defaults={
+            "email": "demo@example.com",
+            "is_staff": True,
+            "is_superuser": True,
+        },
+    )
+    updated = False
+    if user.email != "demo@example.com":
+        user.email = "demo@example.com"
+        updated = True
+    if not user.is_staff:
+        user.is_staff = True
+        updated = True
+    if not user.is_superuser:
+        user.is_superuser = True
+        updated = True
+    if created or not user.check_password(password):
+        user.set_password(password)
+        updated = True
+    if updated:
+        user.save()
+    return user
+
+
+def demo_login(request):
+    if not settings.DEMO_MODE:
+        raise Http404("Demo login is not available")
+
+    try:
+        user = _ensure_demo_user()
+        login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+        return redirect('/')
+    except (OperationalError, DatabaseError):
+        form = AuthenticationForm()
+        form.add_error(None, 'Demo login is temporarily unavailable. Please try again shortly.')
+        return render(request, 'users/login.html', {
+            'form': form,
+            'demo_mode': settings.DEMO_MODE,
+        })
+
+
 def register(request):
     if request.method == 'POST':
         form=UserRegisterForm(request.POST)
@@ -42,6 +89,12 @@ def register(request):
     return render(request,'users/register.html',{'form':form})
 
 def login_view(request):
+    if settings.DEMO_MODE:
+        try:
+            _ensure_demo_user()
+        except (OperationalError, DatabaseError):
+            pass
+
     if request.method == 'POST':
         form=AuthenticationForm(request,data=request.POST)
         try:
@@ -53,7 +106,10 @@ def login_view(request):
             form.add_error(None, 'Login is temporarily unavailable. Please try again shortly.')
     else:
         form=AuthenticationForm()
-    return render(request,'users/login.html',{'form':form})
+    return render(request,'users/login.html',{
+        'form':form,
+        'demo_mode': settings.DEMO_MODE,
+    })
 
 @login_required
 def profile(request):
