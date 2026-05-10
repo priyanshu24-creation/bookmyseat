@@ -1,152 +1,709 @@
 {% extends "users/basic.html" %}
 
+{% block title %}Movies | BookMySeat{% endblock %}
+
 {% block content %}
-<div class="container py-5">
-    <h1 class="text-center mb-5">Movies</h1>
 
-    <div class="row justify-content-center mb-5">
-        <div class="col-md-8">
-           <form method="GET" action="{% url 'movie_list' %}" class="search-bar">
+<section class="movies-page">
+  <div class="movies-shell">
+    {% if using_demo_data %}
+      <div class="demo-alert" role="alert">
+        Live booking is reconnecting. Showing the saved demo catalog for now.
+      </div>
+    {% endif %}
 
-    <div class="input-group mb-3">
+    <div class="movies-hero">
+      <div>
+        <p class="hero-kicker">Now showing</p>
+        <h1>Movies</h1>
+        <p>Find a movie, choose your preferred theater, and reserve your seat in a few quick steps.</p>
+      </div>
+
+      <div class="hero-stat">
+        <span>Available Movies</span>
+        <strong>{{ movies|length }}</strong>
+      </div>
+    </div>
+
+    <form method="GET" action="{% url 'movie_list' %}" class="filter-panel" aria-label="Movie filters">
+      <div class="search-field">
+        <i class="fas fa-search" aria-hidden="true"></i>
         <input
-            class="form-control form-control-lg"
-            name="search"
-            placeholder="Search for Movies"
-            type="text"
-            value="{{ request.GET.search|default_if_none:'' }}"
+          name="search"
+          placeholder="Search by movie name"
+          type="text"
+          value="{{ request.GET.search|default_if_none:'' }}"
         />
-    </div>
+      </div>
 
-    <div class="row mb-3">
-
-        <div class="col-md-4">
-            <select class="form-control" name="genre">
-                <option value="">All Genres</option>
-                <option value="Action">Action</option>
-                <option value="Comedy">Comedy</option>
-                <option value="Drama">Drama</option>
-                <option value="Horror">Horror</option>
-            </select>
+      <div class="custom-select-wrap" data-filter-select>
+        <input type="hidden" name="genre" value="{{ request.GET.genre|default_if_none:'' }}">
+        <button class="custom-select-button" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span>
+            {% if request.GET.genre == "action" %}Action
+            {% elif request.GET.genre == "comedy" %}Comedy
+            {% elif request.GET.genre == "drama" %}Drama
+            {% elif request.GET.genre == "thriller" %}Thriller
+            {% elif request.GET.genre == "horror" %}Horror
+            {% elif request.GET.genre == "romance" %}Romance
+            {% elif request.GET.genre == "biography" %}Biography
+            {% elif request.GET.genre == "animation" %}Animation
+            {% else %}All Genres{% endif %}
+          </span>
+          <i class="fas fa-chevron-down" aria-hidden="true"></i>
+        </button>
+        <div class="custom-select-menu" role="listbox">
+          <button type="button" data-value="" {% if not request.GET.genre %}class="is-active"{% endif %}>All Genres</button>
+          <button type="button" data-value="action" {% if request.GET.genre == "action" %}class="is-active"{% endif %}>Action</button>
+          <button type="button" data-value="comedy" {% if request.GET.genre == "comedy" %}class="is-active"{% endif %}>Comedy</button>
+          <button type="button" data-value="drama" {% if request.GET.genre == "drama" %}class="is-active"{% endif %}>Drama</button>
+          <button type="button" data-value="thriller" {% if request.GET.genre == "thriller" %}class="is-active"{% endif %}>Thriller</button>
+          <button type="button" data-value="horror" {% if request.GET.genre == "horror" %}class="is-active"{% endif %}>Horror</button>
+          <button type="button" data-value="romance" {% if request.GET.genre == "romance" %}class="is-active"{% endif %}>Romance</button>
+          <button type="button" data-value="biography" {% if request.GET.genre == "biography" %}class="is-active"{% endif %}>Biography</button>
+          <button type="button" data-value="animation" {% if request.GET.genre == "animation" %}class="is-active"{% endif %}>Animation</button>
         </div>
+      </div>
 
-        <div class="col-md-4">
-            <select class="form-control" name="language">
-                <option value="">All Languages</option>
-                <option value="Hindi">Hindi</option>
-                <option value="English">English</option>
-                <option value="Tamil">Tamil</option>
-                <option value="Kannada">Kannada</option>
-            </select>
+      <div class="custom-select-wrap" data-filter-select>
+        <input type="hidden" name="language" value="{{ request.GET.language|default_if_none:'' }}">
+        <button class="custom-select-button" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span>
+            {% if request.GET.language == "hindi" %}Hindi
+            {% elif request.GET.language == "english" %}English
+            {% elif request.GET.language == "tamil" %}Tamil
+            {% elif request.GET.language == "telugu" %}Telugu
+            {% else %}All Languages{% endif %}
+          </span>
+          <i class="fas fa-chevron-down" aria-hidden="true"></i>
+        </button>
+        <div class="custom-select-menu" role="listbox">
+          <button type="button" data-value="" {% if not request.GET.language %}class="is-active"{% endif %}>All Languages</button>
+          <button type="button" data-value="hindi" {% if request.GET.language == "hindi" %}class="is-active"{% endif %}>Hindi</button>
+          <button type="button" data-value="english" {% if request.GET.language == "english" %}class="is-active"{% endif %}>English</button>
+          <button type="button" data-value="tamil" {% if request.GET.language == "tamil" %}class="is-active"{% endif %}>Tamil</button>
+          <button type="button" data-value="telugu" {% if request.GET.language == "telugu" %}class="is-active"{% endif %}>Telugu</button>
         </div>
+      </div>
 
-        <div class="col-md-4">
-            <button class="btn btn-primary btn-block" type="submit">
-                Apply Filters
-            </button>
-        </div>
+      <button class="filter-button" type="submit">
+        <i class="fas fa-sliders-h" aria-hidden="true"></i>
+        Apply Filters
+      </button>
+    </form>
 
-    </div>
+    <div class="movie-grid" id="movieList">
+      {% for movie in movies %}
+        <article class="movie-card">
+          <a class="poster-link" href="{% url 'theater_list' movie.id %}" aria-label="View theaters for {{ movie.name }}">
+            <img src="{{ movie.image.url }}" alt="{{ movie.name }}">
+            <span class="rating-badge">
+              <i class="fas fa-star" aria-hidden="true"></i>
+              {{ movie.rating }}
+            </span>
+          </a>
 
-</form>
-
-                    <div class="input-group-append">
-                        <button class="btn btn-primary" type="submit">
-                            <i class="fas fa-search"></i> Search
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div class="row" id="movieList">
-        {% for movie in movies %}
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm">
-                <img src="{{ movie.image.url }}" class="card-img-top" alt="{{ movie.name }}" style="height: 300px; object-fit: cover;">
-                <div class="card-body">
-                    <h5 class="card-title">{{ movie.name }}</h5>
-                    <p class="card-text">
-                        <i class="fas fa-star text-warning"></i> {{ movie.rating }}
-                    </p>
-                    <p class="card-text">
-                        <small class="text-muted">
-                            <i class="fas fa-users"></i> Cast: {{ movie.cast }}
-                        </small>
-                    </p>
-                </div>
-                <div class="card-footer bg-white border-top-0">
-                    <a href="{% url 'theater_list' movie.id %}" class="btn btn-outline-primary btn-block">
-                        View Theaters <i class="fas fa-chevron-right ml-2"></i>
-                    </a>
-                         {% if movie.trailer_url %}
-                            <a href="{{ movie.trailer_url }}" target="_blank" class="btn btn-outline-danger btn-block mt-2">
-                                🎬 Watch Trailer
-                             </a>
-                        {% endif %}
-               
-
-                </div>
+          <div class="movie-content">
+            <div class="movie-copy">
+              <h2 class="movie-title">{{ movie.name }}</h2>
+              <div class="movie-meta">
+                {% if movie.genre %}<span>{{ movie.genre|title }}</span>{% endif %}
+                {% if movie.language %}<span>{{ movie.language|title }}</span>{% endif %}
+              </div>
+              {% if movie.cast %}
+                <p class="movie-cast">Cast: {{ movie.cast }}</p>
+              {% endif %}
             </div>
+
+            <div class="movie-actions">
+              <a href="{% url 'theater_list' movie.id %}" class="primary-action">
+                View Theaters
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+              </a>
+
+              {% if movie.trailer_url %}
+                <a href="{{ movie.trailer_url }}" target="_blank" rel="noopener noreferrer" class="secondary-action">
+                  <i class="fas fa-play" aria-hidden="true"></i>
+                  Watch Trailer
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </article>
+      {% empty %}
+        <div class="empty-state">
+          <div class="empty-icon" aria-hidden="true">
+            <i class="fas fa-film"></i>
+          </div>
+          <h2>No movies found</h2>
+          <p>Try a different search term or clear your filters.</p>
         </div>
-        {% empty %}
-        <div class="col-12 text-center">
-            <p class="lead">No movies found. Try a different search term.</p>
-        </div>
-        {% endfor %}
+      {% endfor %}
     </div>
-</div>
-
-<!-- Bootstrap JS and dependencies -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
-<!-- Font Awesome -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  </div>
+</section>
 
 <style>
-    .card {
-        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  .movies-page {
+    padding: 48px 0 30px;
+    color: #172033;
+  }
+
+  .movies-shell {
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  .demo-alert {
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border: 1px solid #f1d08a;
+    border-radius: 8px;
+    background: #fff8e8;
+    color: #7a5300;
+    font-weight: 700;
+  }
+
+  .movies-hero {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    align-items: flex-end;
+    padding: 36px;
+    border-radius: 8px;
+    background:
+      linear-gradient(135deg, rgba(23, 32, 51, 0.95), rgba(94, 35, 77, 0.88)),
+      url("https://images.unsplash.com/photo-1440404653325-ab127d49abc1?auto=format&fit=crop&w=1400&q=80");
+    background-position: center;
+    background-size: cover;
+    color: #ffffff;
+    box-shadow: 0 22px 55px rgba(23, 32, 51, 0.18);
+  }
+
+  .hero-kicker {
+    display: block;
+    margin: 0 0 8px;
+    color: #ffd2e9;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .movies-hero h1 {
+    margin: 0 0 10px;
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1.08;
+  }
+
+  .movies-hero p {
+    max-width: 640px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .hero-stat {
+    flex: 0 0 auto;
+    min-width: 150px;
+    padding: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.13);
+    backdrop-filter: blur(8px);
+    text-align: center;
+  }
+
+  .hero-stat span {
+    display: block;
+    margin-bottom: 6px;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .hero-stat strong {
+    display: block;
+    color: #ffffff;
+    font-size: 34px;
+    line-height: 1;
+  }
+
+  .filter-panel {
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) 180px 180px 170px;
+    gap: 12px;
+    align-items: center;
+    margin-top: 24px;
+    padding: 18px;
+    border: 1px solid #e7ebf0;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 16px 40px rgba(23, 32, 51, 0.09);
+  }
+
+  .search-field {
+    position: relative;
+  }
+
+  .search-field i {
+    position: absolute;
+    top: 50%;
+    left: 15px;
+    color: #667085;
+    transform: translateY(-50%);
+  }
+
+  .search-field input,
+  .custom-select-button {
+    width: 100%;
+    min-height: 46px;
+    border: 1px solid #d9e0e8;
+    border-radius: 8px;
+    background: #f7f9fc;
+    color: #172033;
+    font-size: 14px;
+    font-weight: 700;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  }
+
+  .search-field input {
+    padding: 0 14px 0 42px;
+  }
+
+  .custom-select-wrap {
+    position: relative;
+  }
+
+  .custom-select-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0 14px;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .custom-select-button span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .custom-select-button i {
+    color: #667085;
+    font-size: 11px;
+    transition: transform 0.2s ease;
+  }
+
+  .custom-select-menu {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    display: none;
+    overflow: hidden;
+    padding: 6px;
+    border: 1px solid #d9e0e8;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 18px 40px rgba(23, 32, 51, 0.18);
+  }
+
+  .custom-select-menu button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #172033;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: left;
+    transition: background 0.18s ease, color 0.18s ease;
+  }
+
+  .custom-select-menu button:hover,
+  .custom-select-menu button:focus {
+    background: #eef8fb;
+    color: #1c6f86;
+    outline: none;
+  }
+
+  .custom-select-menu button.is-active {
+    background: #16875f;
+    color: #ffffff;
+  }
+
+  .custom-select-wrap.is-open .custom-select-button {
+    border-color: #16875f;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(22, 135, 95, 0.12);
+  }
+
+  .custom-select-wrap.is-open .custom-select-button i {
+    transform: rotate(180deg);
+  }
+
+  .custom-select-wrap.is-open .custom-select-menu {
+    display: block;
+  }
+
+  .search-field input:focus,
+  .custom-select-button:focus {
+    border-color: #16875f;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(22, 135, 95, 0.12);
+  }
+
+  .filter-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 46px;
+    border: 0;
+    border-radius: 8px;
+    background: #16875f;
+    color: #ffffff;
+    cursor: pointer;
+    font-weight: 800;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .filter-button:hover,
+  .filter-button:focus {
+    background: #126f4e;
+    box-shadow: 0 12px 26px rgba(22, 135, 95, 0.24);
+    transform: translateY(-1px);
+    outline: none;
+  }
+
+  .movie-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
+    margin-top: 28px;
+  }
+
+  .movie-card {
+    overflow: hidden;
+    border: 1px solid #e7ebf0;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 16px 40px rgba(23, 32, 51, 0.09);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .movie-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 22px 48px rgba(23, 32, 51, 0.14);
+  }
+
+  .poster-link {
+    position: relative;
+    display: block;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    background: #172033;
+  }
+
+  .poster-link img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    transition: transform 0.25s ease;
+  }
+
+  .movie-card:hover .poster-link img {
+    transform: scale(1.035);
+  }
+
+  .rating-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 28px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: rgba(23, 32, 51, 0.82);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+  }
+
+  .rating-badge i {
+    color: #f5b942;
+    font-size: 11px;
+  }
+
+  .movie-content {
+    display: flex;
+    flex-direction: column;
+    min-height: 204px;
+    padding: 16px;
+  }
+
+  .movie-copy {
+    flex: 1 1 auto;
+  }
+
+  .movie-title {
+    margin: 0 0 10px;
+    color: #172033;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.25;
+  }
+
+  .movie-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .movie-meta span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #eef8fb;
+    color: #1c6f86;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .movie-cast {
+    display: -webkit-box;
+    margin: 0;
+    overflow: hidden;
+    color: #667085;
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .movie-actions {
+    display: grid;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .primary-action,
+  .secondary-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 40px;
+    border-radius: 8px;
+    font-weight: 800;
+    text-decoration: none;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+
+  .primary-action {
+    background: #172033;
+    color: #ffffff;
+  }
+
+  .primary-action:hover,
+  .primary-action:focus {
+    background: #16875f;
+    color: #ffffff;
+    text-decoration: none;
+  }
+
+  .secondary-action {
+    border: 1px solid #d9e0e8;
+    background: #ffffff;
+    color: #9a2843;
+  }
+
+  .secondary-action:hover,
+  .secondary-action:focus {
+    border-color: #9a2843;
+    color: #9a2843;
+    text-decoration: none;
+  }
+
+  .empty-state {
+    grid-column: 1 / -1;
+    padding: 42px 28px;
+    border: 1px solid #e7ebf0;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 16px 40px rgba(23, 32, 51, 0.09);
+    text-align: center;
+  }
+
+  .empty-icon {
+    width: 56px;
+    height: 56px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    border-radius: 8px;
+    background: #eef8fb;
+    color: #1c6f86;
+    font-size: 24px;
+  }
+
+  .empty-state h2 {
+    margin: 0 0 10px;
+    font-size: 24px;
+    font-weight: 800;
+  }
+
+  .empty-state p {
+    margin: 0;
+    color: #667085;
+  }
+
+  @media (max-width: 991px) {
+    .movies-hero {
+      display: block;
     }
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+
+    .hero-stat {
+      display: inline-block;
+      margin-top: 22px;
+      text-align: left;
     }
+
+    .filter-panel {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .search-field,
+    .filter-button {
+      grid-column: 1 / -1;
+    }
+
+    .movie-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 576px) {
+    .movies-page {
+      padding-top: 28px;
+    }
+
+    .movies-hero,
+    .filter-panel,
+    .empty-state {
+      padding: 22px;
+    }
+
+    .movies-hero h1 {
+      font-size: 32px;
+    }
+
+    .filter-panel,
+    .movie-grid {
+      grid-template-columns: 1fr;
+    }
+  }
 </style>
 
 <script>
-    $(document).ready(function() {
-        // Add animation to cards on hover
-        $('.card').hover(
-            function() { $(this).addClass('shadow'); },
-            function() { $(this).removeClass('shadow'); }
-        );
+  document.addEventListener("DOMContentLoaded", function() {
+    const searchInput = document.querySelector('input[name="search"]');
+    const movieCards = document.querySelectorAll("#movieList .movie-card");
+    const customSelects = document.querySelectorAll("[data-filter-select]");
 
-        // Implement client-side filtering
-        $('input[name="search"]').on('input', function() {
-            var searchTerm = $(this).val().toLowerCase();
-            $('#movieList .col-md-4').each(function() {
-                var movieTitle = $(this).find('.card-title').text().toLowerCase();
-                if (movieTitle.includes(searchTerm)) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
+    customSelects.forEach(function(select) {
+      const trigger = select.querySelector(".custom-select-button");
+      const triggerLabel = trigger.querySelector("span");
+      const input = select.querySelector("input[type='hidden']");
+      const options = select.querySelectorAll(".custom-select-menu button");
+
+      trigger.addEventListener("click", function() {
+        const isOpen = select.classList.contains("is-open");
+
+        customSelects.forEach(function(item) {
+          item.classList.remove("is-open");
+          item.querySelector(".custom-select-button").setAttribute("aria-expanded", "false");
         });
+
+        if (!isOpen) {
+          select.classList.add("is-open");
+          trigger.setAttribute("aria-expanded", "true");
+        }
+      });
+
+      options.forEach(function(option) {
+        option.addEventListener("click", function() {
+          input.value = option.dataset.value;
+          triggerLabel.textContent = option.textContent;
+
+          options.forEach(function(item) {
+            item.classList.remove("is-active");
+          });
+
+          option.classList.add("is-active");
+          select.classList.remove("is-open");
+          trigger.setAttribute("aria-expanded", "false");
+        });
+      });
     });
+
+    document.addEventListener("click", function(event) {
+      if (event.target.closest("[data-filter-select]")) {
+        return;
+      }
+
+      customSelects.forEach(function(select) {
+        select.classList.remove("is-open");
+        select.querySelector(".custom-select-button").setAttribute("aria-expanded", "false");
+      });
+    });
+
+    document.addEventListener("keydown", function(event) {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      customSelects.forEach(function(select) {
+        select.classList.remove("is-open");
+        select.querySelector(".custom-select-button").setAttribute("aria-expanded", "false");
+      });
+    });
+
+    if (!searchInput) {
+      return;
+    }
+
+    searchInput.addEventListener("input", function() {
+      const searchTerm = searchInput.value.toLowerCase();
+
+      movieCards.forEach(function(card) {
+        const movieTitle = card.querySelector(".movie-title").textContent.toLowerCase();
+        card.style.display = movieTitle.includes(searchTerm) ? "" : "none";
+      });
+    });
+  });
 </script>
-<!-- <h1>Movies</h1>
-<ul>
-    {% for movie in movies%}
-    <li>
-        <img src="{{movie.image.url}}" alt="image" >
-        <strong>{{movie.name}}</strong>{{movie.rating}}
-        <p>Cast:{{movie.cast}}</p>
-        <a href="{% url 'theater_list' movie.id %}">View Theaters</a>
-    </li>
-    {% endfor %}
-</ul> -->
+
 {% endblock %}

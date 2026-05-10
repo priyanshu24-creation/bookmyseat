@@ -1,53 +1,54 @@
 {% extends "users/basic.html" %}
+
+{% block title %}Select Seats | BookMySeat{% endblock %}
+
 {% block content %}
 
-<div class="container mt-5">
-  <div class="row">
-    <div class="col-lg-8 mx-auto">
-
-      <!-- Movie and Theater Info -->
-      <div class="card mb-4">
-        <div class="card-body">
-          <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
-          <div class="w-100 text-center text-md-start">
-   <h4 class="card-title mb-1">{{ theater.movie.name }}</h4>
-<p class="card-text text-muted mb-0">{{ theater.name }}</p>
-  </div>
-
-            <div class="show-row">
-              <div class="mt-2 mt-sm-0">
-                <button class="btn btn-outline-primary me-2 mb-2 mb-sm-0">2D</button>
-                <button class="btn btn-outline-primary me-2 mb-2 mb-sm-0">3D</button>
-                <button class="btn btn-outline-primary mb-2 mb-sm-0">IMAX 3D</button>
-                <button class="btn btn-outline-primary mb-2 mb-sm-0">
-                  {{ seats|length }} Tickets
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </div>
+<section class="seat-page">
+  <div class="seat-shell">
+    <div class="show-header">
+      <div>
+        <p class="show-kicker">Seat selection</p>
+        <h1>{{ theater.movie.name }}</h1>
+        <p class="show-theater">{{ theater.name }}</p>
       </div>
 
-      <!-- Seat Selection -->
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title text-center mb-4">Select Your Seats</h5>
-          <div class="screen">All eyes this way please!</div>
+      <div class="show-meta" aria-label="Show information">
+        <span>2D</span>
+        <span>3D</span>
+        <span>IMAX 3D</span>
+        <span>{{ seats|length }} Seats</span>
+      </div>
+    </div>
 
-          <div id="timerBox" class="text-center text-danger fw-bold mb-3" style="display:none;">
-            ⏳ Reservation expires in <span id="timer"></span>
+    <div class="seat-layout">
+      <div class="seat-card">
+        <div class="seat-card-header">
+          <div>
+            <span class="section-kicker">Choose your seat</span>
+            <h2>Available Seating</h2>
+          </div>
+          <div id="timerBox" class="timer-box" style="display:none;">
+            Reservation expires in <strong id="timer"></strong>
+          </div>
+        </div>
+
+        <form method="POST">
+          {% csrf_token %}
+
+          <div class="screen-wrap" aria-hidden="true">
+            <div class="screen-line"></div>
+            <span>Screen</span>
           </div>
 
-          <form method="POST">
-            {% csrf_token %}
+          <div class="seat-map" aria-label="Seat map">
+            {% regroup seats by seat_number.0 as seat_rows %}
 
-            <div class="d-flex justify-content-center flex-wrap mb-4" style="max-width:100%;overflow-x:auto;">
+            {% for row in seat_rows %}
+            <div class="seat-row">
+              <span class="row-label">{{ row.grouper }}</span>
 
-              {% regroup seats by seat_number.0 as seat_rows %}
-
-              {% for row in seat_rows %}
-              <div class="w-100 d-flex justify-content-center mb-2">
+              <div class="seat-row-seats">
                 {% for seat in row.list %}
                 <div class="seat {% if seat.is_booked %}sold{% endif %}">
                   {% if not seat.is_booked %}
@@ -58,102 +59,461 @@
                       id="seat-{{ seat.id }}"
                       class="seat-input"
                     />
-                    <label for="seat-{{ seat.id }}" class="seat-label">
+                    <label for="seat-{{ seat.id }}" class="seat-label" title="Seat {{ seat.seat_number }}">
                       {{ seat.seat_number }}
                     </label>
                   {% else %}
-                    {{ seat.seat_number }}
+                    <span class="seat-unavailable">{{ seat.seat_number }}</span>
                   {% endif %}
                 </div>
                 {% endfor %}
               </div>
-              {% endfor %}
+            </div>
+            {% endfor %}
+          </div>
 
+          <div class="seat-footer">
+            <div class="seat-legend" aria-label="Seat legend">
+              <div class="legend-item">
+                <span class="legend-swatch available"></span>
+                Available
+              </div>
+              <div class="legend-item">
+                <span class="legend-swatch selected"></span>
+                Selected
+              </div>
+              <div class="legend-item">
+                <span class="legend-swatch sold"></span>
+                Sold
+              </div>
             </div>
 
-            <!-- Seat Legend -->
-            <div class="d-flex justify-content-center mb-4">
-              <div class="d-flex align-items-center me-4">
-                <div class="seat" style="background-color:white;"></div>
-                <span class="ms-2">Available</span>
-              </div>
-              <div class="d-flex align-items-center me-4">
-                <div class="seat selected"></div>
-                <span class="ms-2">Selected</span>
-              </div>
-              <div class="d-flex align-items-center">
-                <div class="seat sold"></div>
-                <span class="ms-2">Sold</span>
-              </div>
-            </div>
-
-            <!-- Book Button -->
-            <div class="text-center">
-              <button type="submit" class="btn btn-success btn-lg w-100">
-                Book Selected Seats
-              </button>
-            </div>
-
-          </form>
-        </div>
+            <button type="submit" class="book-button">
+              <i class="fas fa-ticket-alt" aria-hidden="true"></i>
+              Book Selected Seat
+            </button>
+          </div>
+        </form>
       </div>
 
+      <aside class="selection-info">
+        <div class="info-icon" aria-hidden="true">
+          <i class="fas fa-chair"></i>
+        </div>
+        <h3>Pick a preferred seat</h3>
+        <p>
+          Select one available seat to reserve it for a short time while you complete payment.
+        </p>
+        <div class="info-note">
+          <span>Hold time</span>
+          <strong>5 minutes</strong>
+        </div>
+      </aside>
     </div>
   </div>
-</div>
+</section>
 
 <style>
-.seat {
-  min-width: 36px;
-  min-height: 36px;
-  border: 1px solid #28a745;
-  margin: 4px;
-  text-align: center;
-  line-height: 36px;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 12px;
-  font-weight: bold;
-  color: black;
-  background: white;
-}
+  .seat-page {
+    padding: 48px 0 30px;
+    color: #172033;
+  }
 
-.seat label {
-  display: block;
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
-}
+  .seat-shell {
+    max-width: 1080px;
+    margin: 0 auto;
+  }
 
-.seat.selected {
-  background-color: #28a745;
-  color: white;
-}
+  .show-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    align-items: flex-end;
+    padding: 36px;
+    border-radius: 8px;
+    background:
+      linear-gradient(135deg, rgba(23, 32, 51, 0.95), rgba(114, 34, 54, 0.9)),
+      url("https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=1400&q=80");
+    background-position: center;
+    background-size: cover;
+    color: #ffffff;
+    box-shadow: 0 22px 55px rgba(23, 32, 51, 0.18);
+  }
 
-.seat.sold {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
+  .show-kicker,
+  .section-kicker {
+    display: block;
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
 
-.screen {
-  margin: 20px 0;
-  background-color: #ccc;
-  height: 50px;
-  text-align: center;
-  line-height: 50px;
-  color: #666;
-}
+  .show-kicker {
+    color: #ffd2dc;
+  }
 
-.seat-input {
-  display: none;
-}
+  .show-header h1 {
+    margin: 0 0 8px;
+    font-size: 40px;
+    font-weight: 800;
+    line-height: 1.1;
+  }
 
-.seat-label {
-  display: block;
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
-}
+  .show-theater {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.84);
+    font-size: 16px;
+  }
+
+  .show-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    max-width: 380px;
+  }
+
+  .show-meta span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 8px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 800;
+    backdrop-filter: blur(8px);
+  }
+
+  .seat-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 22px;
+    align-items: start;
+    margin-top: 24px;
+  }
+
+  .seat-card,
+  .selection-info {
+    border: 1px solid #e7ebf0;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 16px 40px rgba(23, 32, 51, 0.09);
+  }
+
+  .seat-card {
+    padding: 30px;
+    overflow: hidden;
+  }
+
+  .seat-card-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    align-items: flex-start;
+    padding-bottom: 22px;
+    border-bottom: 1px solid #eef1f5;
+  }
+
+  .section-kicker {
+    color: #9a2843;
+  }
+
+  .seat-card-header h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .timer-box {
+    flex: 0 0 auto;
+    max-width: 260px;
+    padding: 10px 14px;
+    border: 1px solid #f0cbd3;
+    border-radius: 8px;
+    background: #fff3f5;
+    color: #9a2843;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.4;
+    text-align: right;
+  }
+
+  .screen-wrap {
+    margin: 30px auto 28px;
+    text-align: center;
+  }
+
+  .screen-line {
+    height: 18px;
+    max-width: 520px;
+    margin: 0 auto 10px;
+    border-top: 5px solid #9a2843;
+    border-radius: 50% 50% 0 0;
+    box-shadow: 0 -16px 28px rgba(154, 40, 67, 0.16);
+  }
+
+  .screen-wrap span {
+    color: #667085;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .seat-map {
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 6px 0 12px;
+  }
+
+  .seat-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-width: max-content;
+    margin-bottom: 10px;
+  }
+
+  .row-label {
+    width: 24px;
+    color: #98a2b3;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: center;
+  }
+
+  .seat-row-seats {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .seat {
+    width: 42px;
+    height: 40px;
+    border: 1px solid #b8d7c9;
+    border-radius: 7px 7px 4px 4px;
+    background: #ffffff;
+    color: #172033;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: center;
+    line-height: 38px;
+    transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  }
+
+  .seat-label,
+  .seat-unavailable {
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+  }
+
+  .seat-label {
+    cursor: pointer;
+  }
+
+  .seat:not(.sold):hover {
+    border-color: #16875f;
+    box-shadow: 0 8px 18px rgba(22, 135, 95, 0.16);
+    transform: translateY(-1px);
+  }
+
+  .seat.selected {
+    border-color: #16875f;
+    background: #16875f;
+    color: #ffffff;
+    box-shadow: 0 10px 20px rgba(22, 135, 95, 0.2);
+  }
+
+  .seat.sold {
+    border-color: #d0d5dd;
+    background: #eef1f5;
+    color: #98a2b3;
+    cursor: not-allowed;
+  }
+
+  .seat-input {
+    display: none;
+  }
+
+  .seat-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: center;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #eef1f5;
+  }
+
+  .seat-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #667085;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .legend-swatch {
+    width: 18px;
+    height: 16px;
+    border-radius: 5px 5px 3px 3px;
+    border: 1px solid #b8d7c9;
+    background: #ffffff;
+  }
+
+  .legend-swatch.selected {
+    border-color: #16875f;
+    background: #16875f;
+  }
+
+  .legend-swatch.sold {
+    border-color: #d0d5dd;
+    background: #eef1f5;
+  }
+
+  .book-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-width: 220px;
+    min-height: 48px;
+    border: 0;
+    border-radius: 8px;
+    background: #16875f;
+    color: #ffffff;
+    cursor: pointer;
+    font-weight: 800;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .book-button:hover,
+  .book-button:focus {
+    background: #126f4e;
+    box-shadow: 0 12px 26px rgba(22, 135, 95, 0.24);
+    transform: translateY(-1px);
+    outline: none;
+  }
+
+  .selection-info {
+    padding: 28px;
+  }
+
+  .info-icon {
+    width: 52px;
+    height: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+    border-radius: 8px;
+    background: #fff3f5;
+    color: #9a2843;
+    font-size: 23px;
+  }
+
+  .selection-info h3 {
+    margin: 0 0 10px;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.25;
+  }
+
+  .selection-info p {
+    margin: 0 0 22px;
+    color: #667085;
+    line-height: 1.65;
+  }
+
+  .info-note {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: center;
+    padding: 14px;
+    border-radius: 8px;
+    background: #f7f9fc;
+  }
+
+  .info-note span {
+    color: #667085;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .info-note strong {
+    color: #172033;
+    font-weight: 800;
+  }
+
+  @media (max-width: 991px) {
+    .show-header,
+    .seat-card-header,
+    .seat-footer {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .show-meta {
+      justify-content: flex-start;
+    }
+
+    .seat-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .timer-box {
+      max-width: none;
+      text-align: left;
+    }
+
+    .book-button {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .seat-page {
+      padding-top: 28px;
+    }
+
+    .show-header,
+    .seat-card,
+    .selection-info {
+      padding: 22px;
+    }
+
+    .show-header h1 {
+      font-size: 32px;
+    }
+
+    .seat-card-header h2 {
+      font-size: 24px;
+    }
+
+    .seat {
+      width: 38px;
+      height: 36px;
+      line-height: 34px;
+    }
+  }
 </style>
 
 <script>

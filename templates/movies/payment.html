@@ -1,49 +1,314 @@
 {% extends "users/basic.html" %}
+
+{% block title %}Secure Payment | BookMySeat{% endblock %}
+
 {% block content %}
 
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
+<section class="payment-page">
+  <div class="payment-shell">
+    <div class="payment-hero">
+      <p class="payment-eyebrow">Final step</p>
+      <h1>Complete Your Booking</h1>
+      <p>
+        Review your ticket details below and continue to the secure payment gateway.
+      </p>
+    </div>
 
-      <div class="card shadow-lg p-4 text-center">
-
-        <h3 class="mb-2">🎬 BookMySeat Payment</h3>
-        <p class="text-muted">Confirm your ticket booking</p>
-
-        <hr>
-
-        <div class="mb-3">
-          <h5>Movie</h5>
-          <p class="fw-bold">{{ booking.movie.name }}</p>
+    <div class="payment-layout">
+      <div class="booking-card">
+        <div class="booking-card-header">
+          <div>
+            <span class="section-kicker">Booking Details</span>
+            <h2>{{ booking.movie.name }}</h2>
+          </div>
+          <div class="booking-icon" aria-hidden="true">
+            <i class="fas fa-ticket-alt"></i>
+          </div>
         </div>
 
-        <div class="mb-3">
-          <h5>Theater</h5>
-          <p class="fw-bold">{{ booking.theater.name }}</p>
+        <div class="booking-details">
+          <div class="detail-row">
+            <span>Movie</span>
+            <strong>{{ booking.movie.name }}</strong>
+          </div>
+          <div class="detail-row">
+            <span>Theater</span>
+            <strong>{{ booking.theater.name }}</strong>
+          </div>
+          <div class="detail-row">
+            <span>Seat</span>
+            <strong>{{ booking.seat.seat_number }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <aside class="checkout-card">
+        <div class="checkout-header">
+          <span class="section-kicker">Payment Summary</span>
+          <h2>Rs. {{ booking.total_price }}</h2>
+          <p>Total amount payable</p>
         </div>
 
-        <div class="mb-3">
-          <h5>Seat</h5>
-          <p class="fw-bold">{{ booking.seat.seat_number }}</p>
+        <div class="secure-note">
+          <i class="fas fa-shield-alt" aria-hidden="true"></i>
+          <span>Protected checkout powered by Razorpay</span>
         </div>
 
-        <div class="alert alert-success fs-5 fw-bold">
-          Pay ₹{{ booking.total_price }}
-        </div>
-
-        <button id="rzp-button" class="btn btn-success btn-lg w-100">
+        <button id="rzp-button" class="pay-button" type="button">
+          <i class="fas fa-lock" aria-hidden="true"></i>
           Pay Securely Now
         </button>
 
-        <p class="mt-3 text-muted" style="font-size:13px;">
-          🔒 Secured by Razorpay
+        <p class="payment-disclaimer">
+          You will be redirected after payment confirmation.
         </p>
-
-      </div>
-
+      </aside>
     </div>
   </div>
-</div>
+</section>
+
+<style>
+  .payment-page {
+    padding: 48px 0 30px;
+    color: #172033;
+  }
+
+  .payment-shell {
+    max-width: 980px;
+    margin: 0 auto;
+  }
+
+  .payment-hero {
+    padding: 36px;
+    border-radius: 8px;
+    background:
+      linear-gradient(135deg, rgba(23, 32, 51, 0.95), rgba(28, 91, 112, 0.92)),
+      url("https://images.unsplash.com/photo-1505686994434-e3cc5abf1330?auto=format&fit=crop&w=1400&q=80");
+    background-position: center;
+    background-size: cover;
+    color: #ffffff;
+    box-shadow: 0 22px 55px rgba(23, 32, 51, 0.18);
+  }
+
+  .payment-eyebrow,
+  .section-kicker {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .payment-eyebrow {
+    color: #b9e8f2;
+  }
+
+  .payment-hero h1 {
+    margin: 8px 0 10px;
+    font-size: 40px;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  .payment-hero p:last-child {
+    max-width: 600px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .payment-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 22px;
+    align-items: start;
+    margin-top: 24px;
+  }
+
+  .booking-card,
+  .checkout-card {
+    border: 1px solid #e7ebf0;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 16px 40px rgba(23, 32, 51, 0.09);
+  }
+
+  .booking-card {
+    padding: 30px;
+  }
+
+  .booking-card-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #eef1f5;
+  }
+
+  .section-kicker {
+    display: block;
+    margin-bottom: 8px;
+    color: #1c6f86;
+  }
+
+  .booking-card-header h2 {
+    margin: 0;
+    color: #172033;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .booking-icon {
+    flex: 0 0 auto;
+    width: 54px;
+    height: 54px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: #eef8fb;
+    color: #1c6f86;
+    font-size: 24px;
+  }
+
+  .booking-details {
+    display: grid;
+    gap: 14px;
+    margin-top: 24px;
+  }
+
+  .detail-row {
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr);
+    gap: 18px;
+    align-items: center;
+    min-height: 66px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    background: #f7f9fc;
+  }
+
+  .detail-row span {
+    color: #667085;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .detail-row strong {
+    color: #172033;
+    font-size: 17px;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  .checkout-card {
+    padding: 28px;
+  }
+
+  .checkout-header {
+    padding-bottom: 22px;
+    border-bottom: 1px solid #eef1f5;
+  }
+
+  .checkout-header h2 {
+    margin: 6px 0;
+    color: #16875f;
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  .checkout-header p {
+    margin: 0;
+    color: #667085;
+    font-size: 14px;
+  }
+
+  .secure-note {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin: 22px 0;
+    padding: 14px;
+    border: 1px solid #d9efe4;
+    border-radius: 8px;
+    background: #f1fbf6;
+    color: #14754f;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+
+  .secure-note i {
+    font-size: 18px;
+  }
+
+  .pay-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 50px;
+    border: 0;
+    border-radius: 8px;
+    background: #16875f;
+    color: #ffffff;
+    cursor: pointer;
+    font-weight: 800;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .pay-button:hover,
+  .pay-button:focus {
+    background: #126f4e;
+    box-shadow: 0 12px 26px rgba(22, 135, 95, 0.24);
+    transform: translateY(-1px);
+    outline: none;
+  }
+
+  .payment-disclaimer {
+    margin: 14px 0 0;
+    color: #667085;
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  @media (max-width: 991px) {
+    .payment-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .payment-page {
+      padding-top: 28px;
+    }
+
+    .payment-hero,
+    .booking-card,
+    .checkout-card {
+      padding: 22px;
+    }
+
+    .payment-hero h1 {
+      font-size: 32px;
+    }
+
+    .booking-card-header {
+      flex-direction: column;
+    }
+
+    .detail-row {
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+  }
+</style>
 
 <!-- DO NOT TOUCH BELOW CODE -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>

@@ -1,55 +1,330 @@
 {% extends "users/basic.html" %}
+
+{% block title %}Payment Successful | BookMySeat{% endblock %}
+
 {% block content %}
 
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
+<section class="payment-success-page">
+  <div class="success-shell">
+    <div class="success-hero">
+      <div class="success-badge" aria-hidden="true">
+        <i class="fas fa-check"></i>
+      </div>
+      <p class="success-eyebrow">Booking confirmed</p>
+      <h1>Payment Successful</h1>
+      <p class="success-subtitle">
+        Your ticket has been reserved. Please keep these details handy when you arrive at the theater.
+      </p>
+    </div>
 
-      <div class="card shadow-lg p-4 text-center">
-
-        <div style="font-size:60px;">✅</div>
-
-        <h2 class="text-success mt-2">Payment Successful</h2>
-        <p class="text-muted">Your ticket booking is confirmed</p>
-
-        <hr>
-
-        <div class="mb-3">
-          <h5>🎬 Movie</h5>
-          <p class="fw-bold">{{ booking.movie.name }}</p>
+    <div class="success-panel">
+      <div class="ticket-card">
+        <div class="ticket-header">
+          <div>
+            <span class="ticket-label">Movie Ticket</span>
+            <h2>{{ booking.movie.name }}</h2>
+          </div>
+          <span class="ticket-status">Paid</span>
         </div>
 
-        <div class="mb-3">
-          <h5>🏛 Theater</h5>
-          <p class="fw-bold">{{ booking.theater.name }}</p>
+        <div class="ticket-divider"></div>
+
+        <div class="ticket-grid">
+          <div class="ticket-detail">
+            <span>Movie</span>
+            <strong>{{ booking.movie.name }}</strong>
+          </div>
+          <div class="ticket-detail">
+            <span>Theater</span>
+            <strong>{{ booking.theater.name }}</strong>
+          </div>
+          <div class="ticket-detail">
+            <span>Seat</span>
+            <strong>{{ booking.seat.seat_number }}</strong>
+          </div>
+          <div class="ticket-detail">
+            <span>Amount Paid</span>
+            <strong>Rs. {{ booking.total_price }}</strong>
+          </div>
         </div>
-
-        <div class="mb-3">
-          <h5>💺 Seat</h5>
-          <p class="fw-bold">{{ booking.seat.seat_number }}</p>
-        </div>
-
-        <div class="mb-3">
-          <h5>💰 Amount Paid</h5>
-          <p class="fw-bold">₹{{ booking.total_price }}</p>
-        </div>
-
-        <div class="alert alert-success fw-bold fs-5">
-          Enjoy your show! 🍿
-        </div>
-
-        <a href="/" class="btn btn-primary btn-lg w-100">
-          Go Home
-        </a>
-
-        <p class="mt-3 text-muted" style="font-size:13px;">
-          Thank you for booking with BookMySeat ❤️
-        </p>
-
       </div>
 
+      <aside class="summary-card">
+        <div class="summary-icon" aria-hidden="true">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <h3>Secure checkout completed</h3>
+        <p>
+          A successful payment has been recorded for this booking. You can now continue browsing or return home.
+        </p>
+        <a href="/" class="btn-home">
+          <i class="fas fa-home" aria-hidden="true"></i>
+          Go Home
+        </a>
+      </aside>
     </div>
   </div>
-</div>
+</section>
+
+<style>
+  .payment-success-page {
+    padding: 48px 0 28px;
+    color: #172033;
+  }
+
+  .success-shell {
+    max-width: 980px;
+    margin: 0 auto;
+  }
+
+  .success-hero {
+    position: relative;
+    overflow: hidden;
+    padding: 42px 36px;
+    border-radius: 8px;
+    background:
+      linear-gradient(135deg, rgba(24, 120, 91, 0.94), rgba(22, 35, 58, 0.96)),
+      url("https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1400&q=80");
+    background-position: center;
+    background-size: cover;
+    color: #ffffff;
+    box-shadow: 0 22px 55px rgba(23, 32, 51, 0.18);
+  }
+
+  .success-badge {
+    width: 68px;
+    height: 68px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #16875f;
+    font-size: 30px;
+    box-shadow: 0 16px 35px rgba(0, 0, 0, 0.18);
+  }
+
+  .success-eyebrow,
+  .ticket-label,
+  .ticket-detail span {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .success-eyebrow {
+    color: #bcebd5;
+  }
+
+  .success-hero h1 {
+    margin: 6px 0 10px;
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1.08;
+  }
+
+  .success-subtitle {
+    max-width: 620px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .success-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 22px;
+    align-items: stretch;
+    margin-top: 24px;
+  }
+
+  .ticket-card,
+  .summary-card {
+    border: 1px solid #e7ebf0;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 16px 40px rgba(23, 32, 51, 0.09);
+  }
+
+  .ticket-card {
+    position: relative;
+    overflow: hidden;
+    padding: 30px;
+  }
+
+  .ticket-card::before,
+  .ticket-card::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #f7f9fc;
+    border: 1px solid #e7ebf0;
+    transform: translateY(-50%);
+  }
+
+  .ticket-card::before {
+    left: -15px;
+  }
+
+  .ticket-card::after {
+    right: -15px;
+  }
+
+  .ticket-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+  }
+
+  .ticket-label {
+    color: #16875f;
+  }
+
+  .ticket-header h2 {
+    margin: 8px 0 0;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .ticket-status {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    background: #eaf8f0;
+    color: #14754f;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .ticket-divider {
+    margin: 26px 0;
+    border-top: 1px dashed #cfd7e2;
+  }
+
+  .ticket-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .ticket-detail {
+    min-height: 84px;
+    padding: 16px;
+    border-radius: 8px;
+    background: #f7f9fc;
+  }
+
+  .ticket-detail span {
+    display: block;
+    margin-bottom: 8px;
+    color: #667085;
+  }
+
+  .ticket-detail strong {
+    display: block;
+    color: #172033;
+    font-size: 17px;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  .summary-card {
+    padding: 28px;
+  }
+
+  .summary-icon {
+    width: 50px;
+    height: 50px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #2457a6;
+    font-size: 22px;
+  }
+
+  .summary-card h3 {
+    margin: 0 0 10px;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.25;
+  }
+
+  .summary-card p {
+    margin: 0 0 24px;
+    color: #667085;
+    line-height: 1.65;
+  }
+
+  .btn-home {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 48px;
+    border-radius: 8px;
+    background: #172033;
+    color: #ffffff;
+    font-weight: 800;
+    text-decoration: none;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .btn-home:hover,
+  .btn-home:focus {
+    color: #ffffff;
+    text-decoration: none;
+    background: #16875f;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 26px rgba(22, 135, 95, 0.24);
+  }
+
+  @media (max-width: 991px) {
+    .success-panel {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .payment-success-page {
+      padding-top: 28px;
+    }
+
+    .success-hero {
+      padding: 32px 22px;
+    }
+
+    .success-hero h1 {
+      font-size: 32px;
+    }
+
+    .ticket-card,
+    .summary-card {
+      padding: 22px;
+    }
+
+    .ticket-header {
+      flex-direction: column;
+    }
+
+    .ticket-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
 
 {% endblock %}

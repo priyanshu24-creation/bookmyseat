@@ -1,198 +1,410 @@
-{% extends "users/basic.html" %} 
+{% extends "users/basic.html" %}
+
+{% block title %}
+  {% if movie %}{{ movie.name }} Theaters | BookMySeat{% else %}Theaters | BookMySeat{% endif %}
+{% endblock %}
+
 {% block content %}
-<style>
-/* Styling */
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f8f9fa;
-  color: #333;
-  margin: 0;
-  padding: 0;
-}
 
-.container {
-  padding: 20px;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.movie-title {
-  font-size: 28px;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-/* Theatre Info Styling */
-.theatre-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  margin-bottom: 15px;
-  flex-wrap: wrap;
-}
-
-.theatre-info strong {
-  font-size: 18px;
-  flex: 1;
-}
-
-/* Info Icons Styling */
-.info-icons {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 10px;
-  margin-top: 10px;
-  flex: 2;
-}
-
-.info-icons i {
-  margin-right: 5px;
-  font-size: 18px;
-}
-
-.info-section {
-  flex: 1;
-  text-align: right;
-}
-
-/* Show Times Styling */
-.show-times {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 0;
-  flex-wrap: wrap;
-}
-
-.time-box {
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  padding: 10px 20px;
-  text-align: center;
-  background-color: #f1f1f1;
-  margin-bottom: 10px;
-  flex: 1;
-  min-width: 100px;
-  transition: transform 0.3s ease, background-color 0.3s ease;
-}
-
-.time-box:hover {
-  transform: scale(1.05);
-  background-color: #28a745;
-  color: white;
-}
-
-.time-box span {
-  display: block;
-  font-size: 12px;
-  color: black;
-}
-.time-box span:hover {
-  color: white;
-}
-
-/* Non-Cancellable Styling */
-.non-cancellable {
-  color: #ffc107;
-  font-size: 12px;
-  margin-top: 20px;
-  display: flex;
-  align-items: center;
-}
-
-.non-cancellable i {
-  margin-right: 5px;
-}
-
-/* Responsive Styling */
-@media (max-width: 768px) {
-  .theatre-info {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .info-section {
-    text-align: left;
-    margin-top: 10px;
-  }
-
-  .show-times {
-    justify-content: space-between;
-  }
-
-  .time-box {
-    flex: 1 1 100%;
-    margin-bottom: 10px;
-  }
-}
-</style>
-
-<body>
-  <div class="container">
+<section class="theater-page">
+  <div class="theater-shell">
     {% if using_demo_data %}
-      <div class="alert alert-warning mt-3" role="alert">
+      <div class="demo-alert" role="alert">
         Live booking is reconnecting. Showing the saved demo schedule for now.
       </div>
     {% endif %}
 
-    <!-- Movie Title -->
-    {% if movie %}
-      <div class="movie-title">Movie - {{ movie.name }}</div>
-    {% else %}
-      <div class="movie-title">Movie - Not Available</div>
-    {% endif %}
+    <div class="theater-hero">
+      <div>
+        <p class="hero-kicker">Select theater</p>
+        {% if movie %}
+          <h1>{{ movie.name }}</h1>
+        {% else %}
+          <h1>Movie Not Available</h1>
+        {% endif %}
+        <p>Choose a theater and showtime to continue to seat selection.</p>
+      </div>
 
-    <!-- Conditional Check for Theaters -->
+      <div class="hero-stat">
+        <span>Available Venues</span>
+        <strong>{{ theaters|length }}</strong>
+      </div>
+    </div>
+
     {% if theaters %}
-      {% for theater in theaters %}
-      <div class="theatre-info">
-        <div>
-          <strong>{{ theater.name }} Theater</strong>
-          <div class="info-icons mt-2">
-            <i class="fas fa-mobile-alt text-success"></i> M-Ticket
-            <i class="fas fa-utensils text-warning ms-3"></i> Food & Beverage
-            <i class="fas fa-parking text-primary ms-3"></i> Parking Available
-            <i class="fas fa-wheelchair text-info ms-3"></i> Wheelchair Access
-            <i class="fas fa-glasses text-danger ms-3"></i> 3D Show Available
+      <div class="theater-list">
+        {% for theater in theaters %}
+        <article class="theater-card">
+          <div class="theater-main">
+            <div class="theater-title-row">
+              <div class="theater-icon" aria-hidden="true">
+                <i class="fas fa-building"></i>
+              </div>
+              <div>
+                <span class="section-kicker">Cinema</span>
+                <h2>{{ theater.name }} Theater</h2>
+              </div>
+            </div>
+
+            <div class="facility-list" aria-label="Theater facilities">
+              <span><i class="fas fa-mobile-alt" aria-hidden="true"></i> M-Ticket</span>
+              <span><i class="fas fa-utensils" aria-hidden="true"></i> Food & Beverage</span>
+              <span><i class="fas fa-parking" aria-hidden="true"></i> Parking</span>
+              <span><i class="fas fa-wheelchair" aria-hidden="true"></i> Accessible</span>
+              <span><i class="fas fa-glasses" aria-hidden="true"></i> 3D Shows</span>
+            </div>
           </div>
-        </div>
+
+          <div class="showtime-panel">
+            <span class="section-kicker">Showtime</span>
+            <div class="showtime-value">
+              {% if theater.time %}
+                {{ theater.time }}
+              {% else %}
+                Time Not Set
+              {% endif %}
+            </div>
+
+            {% if booking_available %}
+              <a class="book-link" href="{% url 'book_seats' theater.id %}">
+                <i class="fas fa-ticket-alt" aria-hidden="true"></i>
+                Book Now
+              </a>
+            {% else %}
+              <span class="demo-link">Demo View Only</span>
+            {% endif %}
+          </div>
+        </article>
+        {% endfor %}
       </div>
-
-      <div class="show-times">
-        <div class="time-box">
-
-          {% if theater.time %}
-            {{ theater.time }}
-          {% else %}
-            Time Not Set
-          {% endif %}
-
-          {% if booking_available %}
-            <a href="{% url 'book_seats' theater.id %}">
-              <span>Book Now</span>
-            </a>
-          {% else %}
-            <span>Demo View Only</span>
-          {% endif %}
-        </div>
-      </div>
-      {% endfor %}
     {% else %}
-      <div class="no-theaters mt-4">
+      <div class="empty-state">
+        <div class="empty-icon" aria-hidden="true">
+          <i class="fas fa-film"></i>
+        </div>
+        <h2>No theaters available</h2>
         <p>Sorry, no theaters are available for this movie at the moment.</p>
       </div>
     {% endif %}
 
-    <div class="non-cancellable mt-4">
-      <i class="fas fa-circle text-warning"></i> Non-cancellable
+    <div class="policy-note">
+      <i class="fas fa-info-circle" aria-hidden="true"></i>
+      <span>Bookings for these shows are non-cancellable.</span>
     </div>
   </div>
-</body>
+</section>
+
+<style>
+  .theater-page {
+    padding: 48px 0 30px;
+    color: #172033;
+  }
+
+  .theater-shell {
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+
+  .demo-alert {
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border: 1px solid #f1d08a;
+    border-radius: 8px;
+    background: #fff8e8;
+    color: #7a5300;
+    font-weight: 700;
+  }
+
+  .theater-hero {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    align-items: flex-end;
+    padding: 36px;
+    border-radius: 8px;
+    background:
+      linear-gradient(135deg, rgba(23, 32, 51, 0.95), rgba(28, 91, 112, 0.9)),
+      url("https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&w=1400&q=80");
+    background-position: center;
+    background-size: cover;
+    color: #ffffff;
+    box-shadow: 0 22px 55px rgba(23, 32, 51, 0.18);
+  }
+
+  .hero-kicker,
+  .section-kicker {
+    display: block;
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .hero-kicker {
+    color: #b9e8f2;
+  }
+
+  .theater-hero h1 {
+    margin: 0 0 10px;
+    font-size: 40px;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  .theater-hero p {
+    max-width: 620px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .hero-stat {
+    flex: 0 0 auto;
+    min-width: 150px;
+    padding: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.13);
+    backdrop-filter: blur(8px);
+    text-align: center;
+  }
+
+  .hero-stat span {
+    display: block;
+    margin-bottom: 6px;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .hero-stat strong {
+    display: block;
+    color: #ffffff;
+    font-size: 34px;
+    line-height: 1;
+  }
+
+  .theater-list {
+    display: grid;
+    gap: 18px;
+    margin-top: 24px;
+  }
+
+  .theater-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 250px;
+    gap: 22px;
+    align-items: stretch;
+    padding: 26px;
+    border: 1px solid #e7ebf0;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 16px 40px rgba(23, 32, 51, 0.09);
+  }
+
+  .theater-main {
+    min-width: 0;
+  }
+
+  .theater-title-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .theater-icon {
+    flex: 0 0 auto;
+    width: 52px;
+    height: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: #eef8fb;
+    color: #1c6f86;
+    font-size: 22px;
+  }
+
+  .section-kicker {
+    color: #1c6f86;
+  }
+
+  .theater-title-row h2 {
+    margin: 0;
+    color: #172033;
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.25;
+  }
+
+  .facility-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 22px;
+  }
+
+  .facility-list span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+    padding: 7px 12px;
+    border: 1px solid #e5eaf0;
+    border-radius: 999px;
+    background: #f7f9fc;
+    color: #4f5f73;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .facility-list i {
+    color: #1c6f86;
+    font-size: 14px;
+  }
+
+  .showtime-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20px;
+    border-radius: 8px;
+    background: #f7f9fc;
+  }
+
+  .showtime-value {
+    margin-bottom: 16px;
+    color: #172033;
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .book-link,
+  .demo-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 46px;
+    border-radius: 8px;
+    font-weight: 800;
+    text-align: center;
+  }
+
+  .book-link {
+    background: #16875f;
+    color: #ffffff;
+    text-decoration: none;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .book-link:hover,
+  .book-link:focus {
+    color: #ffffff;
+    text-decoration: none;
+    background: #126f4e;
+    box-shadow: 0 12px 26px rgba(22, 135, 95, 0.24);
+    transform: translateY(-1px);
+  }
+
+  .demo-link {
+    border: 1px solid #d0d5dd;
+    background: #ffffff;
+    color: #667085;
+  }
+
+  .empty-state {
+    margin-top: 24px;
+    padding: 42px 28px;
+    border: 1px solid #e7ebf0;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 16px 40px rgba(23, 32, 51, 0.09);
+    text-align: center;
+  }
+
+  .empty-icon {
+    width: 56px;
+    height: 56px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    border-radius: 8px;
+    background: #eef8fb;
+    color: #1c6f86;
+    font-size: 24px;
+  }
+
+  .empty-state h2 {
+    margin: 0 0 10px;
+    font-size: 24px;
+    font-weight: 800;
+  }
+
+  .empty-state p {
+    margin: 0;
+    color: #667085;
+  }
+
+  .policy-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 12px 14px;
+    border: 1px solid #f1d08a;
+    border-radius: 8px;
+    background: #fff8e8;
+    color: #7a5300;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  @media (max-width: 991px) {
+    .theater-hero,
+    .theater-card {
+      grid-template-columns: 1fr;
+    }
+
+    .theater-hero {
+      display: block;
+    }
+
+    .hero-stat {
+      display: inline-block;
+      margin-top: 22px;
+      text-align: left;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .theater-page {
+      padding-top: 28px;
+    }
+
+    .theater-hero,
+    .theater-card,
+    .empty-state {
+      padding: 22px;
+    }
+
+    .theater-hero h1 {
+      font-size: 32px;
+    }
+
+    .theater-title-row {
+      flex-direction: column;
+    }
+
+    .showtime-value {
+      font-size: 21px;
+    }
+  }
+</style>
 
 {% endblock %}

@@ -1,4 +1,6 @@
-{% extends "users/basic.html" %} {% block content %}
+{% extends "users/basic.html" %}
+{% load static %}
+{% block content %}
 <style>
     body {
       font-family: "Arial", sans-serif;
@@ -39,13 +41,136 @@
       font-size: 14px;
       color: #666;
     }
-    .carousel-item img {
-      object-fit: cover;
-    }
-    .carousel-caption {
-      background: rgba(0, 0, 0, 0.5);
+    .promo-slider {
+      position: relative;
+      height: 300px;
+      margin: 18px 0 28px;
+      overflow: hidden;
       border-radius: 10px;
-      padding: 20px;
+      background: #111827;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.2);
+      isolation: isolate;
+    }
+    .promo-slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transform: scale(1.04);
+      transition: opacity 900ms ease, transform 1600ms ease;
+      pointer-events: none;
+    }
+    .promo-slide.active {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+      z-index: 1;
+    }
+    .promo-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .promo-slider::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 40%;
+      background: linear-gradient(180deg, rgba(17, 24, 39, 0), rgba(17, 24, 39, 0.18));
+      z-index: 2;
+      pointer-events: none;
+    }
+    .promo-control {
+      position: absolute;
+      top: 50%;
+      z-index: 4;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      border-radius: 50%;
+      background: rgba(17, 24, 39, 0.42);
+      color: #fff;
+      font-size: 28px;
+      line-height: 1;
+      display: grid;
+      place-items: center;
+      transform: translateY(-50%);
+      backdrop-filter: blur(10px);
+      transition: background 200ms ease, transform 200ms ease;
+    }
+    .promo-control:hover {
+      background: rgba(17, 24, 39, 0.72);
+      transform: translateY(-50%) scale(1.05);
+    }
+    .promo-control:focus {
+      outline: 3px solid rgba(255, 255, 255, 0.7);
+      outline-offset: 2px;
+    }
+    .promo-control.prev {
+      left: 18px;
+    }
+    .promo-control.next {
+      right: 18px;
+    }
+    .promo-dots {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      z-index: 4;
+      display: flex;
+      gap: 8px;
+      transform: translateX(-50%);
+    }
+    .promo-dot {
+      width: 9px;
+      height: 9px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.58);
+      transition: width 250ms ease, background 250ms ease;
+    }
+    .promo-dot.active {
+      width: 28px;
+      background: #fff;
+    }
+    .promo-progress {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 5;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.16);
+    }
+    .promo-progress span {
+      display: block;
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #f84464, #ffffff);
+    }
+    .promo-progress.animate span {
+      animation: promoProgress 5s linear forwards;
+    }
+    @keyframes promoProgress {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+    @media (max-width: 767px) {
+      .promo-slider {
+        height: 170px;
+        border-radius: 8px;
+      }
+      .promo-control {
+        width: 34px;
+        height: 34px;
+        font-size: 22px;
+      }
+      .promo-control.prev {
+        left: 10px;
+      }
+      .promo-control.next {
+        right: 10px;
+      }
     }
     .btn-primary {
       background-color: #007bff;
@@ -57,60 +182,32 @@
     }
   </style>
   
-  <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
-    <ol class="carousel-indicators">
-      <li
-        data-target="#carouselExampleIndicators"
-        data-slide-to="0"
-        class="active"
-      ></li>
-      <li data-target="#carouselExampleIndicators" data-slide-to="1"></li>
-      <li data-target="#carouselExampleIndicators" data-slide-to="2"></li>
-    </ol>
-    <div class="carousel-inner">
-      <div class="carousel-item active">
-        <img
-          class="d-block w-100"
-          src="https://assets-in.bmscdn.com/promotions/cms/creatives/1728390794440_bandlanddesktop.jpg"
-          alt="First slide"
-          height="300"
-        />
-      </div>
-      <div class="carousel-item">
-        <img
-          class="d-block w-100"
-          src="https://assets-in.bmscdn.com/promotions/cms/creatives/1726036566435_playcardnewweb.jpg"
-          alt="Second slide"
-          height="300"
-        />
-      </div>
-      <div class="carousel-item">
-        <img
-          class="d-block w-100"
-          src="https://assets-in.bmscdn.com/promotions/cms/creatives/1729172081740_sorcar1240x300.jpg"
-          alt="Third slide"
-          height="300"
-        />
-      </div>
+  <div class="promo-slider" data-promo-slider>
+    <div class="promo-slide active">
+      <img
+        src="{% static 'banners/they-will-kill-you.png' %}"
+        alt="They Will Kill You early access promotion"
+      />
     </div>
-    <a
-      class="carousel-control-prev"
-      href="#carouselExampleIndicators"
-      role="button"
-      data-slide="prev"
-    >
-      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-      <span class="sr-only">Previous</span>
-    </a>
-    <a
-      class="carousel-control-next"
-      href="#carouselExampleIndicators"
-      role="button"
-      data-slide="next"
-    >
-      <span class="carousel-control-next-icon" aria-hidden="true"></span>
-      <span class="sr-only">Next</span>
-    </a>
+    <div class="promo-slide">
+      <img
+        src="{% static 'banners/cashback-offer.png' %}"
+        alt="Flat 5 percent cashback payment offer"
+      />
+    </div>
+
+    <button class="promo-control prev" type="button" data-promo-prev aria-label="Previous promotion">
+      &lsaquo;
+    </button>
+    <button class="promo-control next" type="button" data-promo-next aria-label="Next promotion">
+      &rsaquo;
+    </button>
+
+    <div class="promo-dots" aria-label="Promotion slides">
+      <button class="promo-dot active" type="button" data-promo-dot="0" aria-label="Show promotion 1"></button>
+      <button class="promo-dot" type="button" data-promo-dot="1" aria-label="Show promotion 2"></button>
+    </div>
+    <div class="promo-progress animate" aria-hidden="true"><span></span></div>
   </div>
   
   <div class="container mt-4">
@@ -372,6 +469,63 @@
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   <script>
+    (function () {
+      var slider = document.querySelector("[data-promo-slider]");
+      if (!slider) return;
+
+      var slides = slider.querySelectorAll(".promo-slide");
+      var dots = slider.querySelectorAll(".promo-dot");
+      var progress = slider.querySelector(".promo-progress");
+      var currentSlide = 0;
+      var slideTimer;
+      var slideDelay = 5000;
+
+      function restartProgress() {
+        if (!progress) return;
+        progress.classList.remove("animate");
+        void progress.offsetWidth;
+        progress.classList.add("animate");
+      }
+
+      function showSlide(index) {
+        currentSlide = (index + slides.length) % slides.length;
+        slides.forEach(function (slide, slideIndex) {
+          slide.classList.toggle("active", slideIndex === currentSlide);
+        });
+        dots.forEach(function (dot, dotIndex) {
+          dot.classList.toggle("active", dotIndex === currentSlide);
+        });
+        restartProgress();
+      }
+
+      function queueNextSlide() {
+        clearInterval(slideTimer);
+        slideTimer = setInterval(function () {
+          showSlide(currentSlide + 1);
+        }, slideDelay);
+      }
+
+      slider.querySelector("[data-promo-prev]").addEventListener("click", function () {
+        showSlide(currentSlide - 1);
+        queueNextSlide();
+      });
+
+      slider.querySelector("[data-promo-next]").addEventListener("click", function () {
+        showSlide(currentSlide + 1);
+        queueNextSlide();
+      });
+
+      dots.forEach(function (dot) {
+        dot.addEventListener("click", function () {
+          showSlide(Number(dot.dataset.promoDot));
+          queueNextSlide();
+        });
+      });
+
+      queueNextSlide();
+      restartProgress();
+    })();
+
     $(document).ready(function () {
       $(".card").hover(
         function () {

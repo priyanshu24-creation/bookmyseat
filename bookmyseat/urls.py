@@ -21,6 +21,10 @@ if settings.DEBUG or getattr(settings, "USE_SQLITE_LOCAL", False) or getattr(set
         path('media/<path:path>', serve, {'document_root': settings.MEDIA_ROOT}),
     ]
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    if settings.STATICFILES_DIRS:
+        urlpatterns += [
+            path('static/<path:path>', serve, {'document_root': settings.STATICFILES_DIRS[0]}),
+        ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
